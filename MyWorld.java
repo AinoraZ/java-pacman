@@ -1,4 +1,4 @@
-import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
+import greenfoot.*;
 import java.util.Scanner;
 import java.io.*;
 
@@ -10,10 +10,6 @@ import java.io.*;
  */
 public class MyWorld extends World
 {
-    /**
-     * Constructor for objects of class MyWorld.
-     * 
-     */
     
     private LevelInfo level = new LevelInfo();
     private Player player = new Player();
@@ -32,31 +28,42 @@ public class MyWorld extends World
     private int orbTime = 10;
     private int frameRate = 60;
     private int palletsCreated = 0;
-    private Background bgImg = new Background();
+    private Background bgImg;
+    String path = MyWorld.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     
-    private int life = 3;
+    public int life = 3;
+    private int levelCounter = 1;
+    
+    private boolean gameover = false;
+    
+    private String key;
+    
     
     public MyWorld()
     {    
         // Create a new world with 600x400 cells with a cell size of 1x1 pixels.
-        super(new Background().getWidth(), new Background().getHeight(), 1);
-        setBackground(bgImg.returnImage());
+        super(new Background("images/background.jpg").getWidth(), new Background("images/background.jpg").getHeight(), 1);
+        
+        File parent = new File(path);
+        path = parent.getParentFile().getPath();
         
         getHighscore();
         
-        //addObject(player.returnActor(), 300, 240);
+        bgImg = new Background(level.bg);
+        setBackground(bgImg.returnImage());
+        
         addPallets();
         
         spawnGhosts();
-        addObject(player.returnActor(), 610, 635);
+        addObject(player.returnActor(), level.player[0], level.player[1]);
         
         displayLife();
     }
     
     private void getHighscore(){
-        File file = new File("./highscore.txt");
         try {
-
+            File file = new File(path + "/highscore.txt");
+            
             Scanner scanner = new Scanner(file);
     
             if (scanner.hasNextInt()) {
@@ -67,7 +74,7 @@ public class MyWorld extends World
             }
             scanner.close();
         } 
-        catch (FileNotFoundException e) {
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -84,39 +91,102 @@ public class MyWorld extends World
                     addObject(new Pallets().returnActor(), (int) (startX + tX * x), (int) (startY + tY * y));
                     palletsCreated++;
                 }
-                if(level.legalMove((int) x, (int) y) == 2){
+                else if(level.legalMove((int) x, (int) y) == 2){
                     addObject(new EnergyOrb().returnActor(), (int) (startX + tX * x), (int) (startY + tY * y));
                     palletsCreated++;
                 }
+                
             }
         }
     }
     
     public void act(){
-        handleScore();
-        handleTunnel();
-        ghostEdible();
-        handleWin();
+        if(!gameover){
+            handleScore();
+            handleTunnel();
+            ghostEdible();
+            handleWin();
+        }
+        else{
+            pressToContinue();
+            handleTunnel();
+        }
+    }
+    
+    public void pressToContinue(){
+        key = Greenfoot.getKey();
+        if(key != null){
+            if(Greenfoot.isKeyDown(key))
+                Greenfoot.setWorld(new MyWorld());
+        
+        }
     }
     
     private void handleWin(){
         if(player.getPalletsEaten() == palletsCreated){
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-              new FileOutputStream("highscore.txt"), "utf-8"))) {
-                  writer.write(Integer.toString(highscore));
+            try{
+                FileWriter fileWriter = new FileWriter(path + "/highscore.txt");
+                PrintWriter printWriter = new PrintWriter(fileWriter);
+                printWriter.print(Integer.toString(highscore) + "\n");
+                printWriter.close();
+                
             }
             catch(Exception e){
                 e.printStackTrace();
             }
-            Greenfoot.stop();
+            levelCounter++;
+            
+            if(levelCounter == 2){
+                level.setLevel2();
+            }
+            else if(levelCounter == 3){
+                level.setLevel3();
+            }
+            if(levelCounter == 4){
+                addObject(new StaticImage("images/youwin.png").getActor(), bgImg.getWidth() / 2, bgImg.getHeight() / 2);
+                Greenfoot.stop();
+                return;
+            }
+            
+            bgImg = new Background(level.bg);
+            setBackground(bgImg.returnImage());
+            displayLife();
+   
+            addPallets();
+            hardReset();
+            
+            System.gc();
         }
+    }
+    
+    public void hardReset(){
+        reset();
+        
+        player.level = level;
+        player.reset();
+        
+        for(int x = 0; x < ghs.length; x++){
+            if(ghs[x] != null){
+                removeObject(ghs[x]);
+            }
+            else{
+                ghs[x] = new Ghost(x+1, player);
+                removedGhs[x] = null;
+            }
+            ghs[x].level = level;
+            ghs[x].reset();
+        }
+        spawnGhosts();
+        
+        removeObject(player);
+        addObject(player.returnActor(), level.player[0], level.player[1]);
     }
     
     public void handleDeath(){
         if(life <= 0){
-           System.out.println("Setting new world");
-           Greenfoot.setWorld(new MyWorld());
-           return;
+            addObject(new StaticImage("images/gameover.png").getActor(), bgImg.getWidth() / 2, bgImg.getHeight() / 2);
+            gameover = true;
+            return;
         }
         for(int x = 0; x < 4; x++){
             if(ghs[x] != null){
@@ -133,12 +203,14 @@ public class MyWorld extends World
         player.reset();
         
         removeObject(player);
-        addObject(player.returnActor(), 610, 635);
+        addObject(player.returnActor(), level.player[0], level.player[1]);
+        
+        System.gc();
         
     }
     
     public void subtract_life(){
-        if(life > 0)
+        if(life >= 1)
             life--;
         displayLife();
     }
@@ -149,17 +221,17 @@ public class MyWorld extends World
     }
     
     private void spawnGhosts(){
-        addObject(ghs[0].returnActor(), 730, 316);
-        addObject(ghs[1].returnActor(), 730, 475);
-        addObject(ghs[2].returnActor(), 460, 316);
-        addObject(ghs[3].returnActor(), 460, 475);
+        for(int x = 0; x < 4; x++){
+            addObject(ghs[x].getActor(), level.ghosts[x][0], level.ghosts[x][1]);
+        }
     }
     
     private void displayLife(){
         GreenfootImage lifeImg = new GreenfootImage("life.png");
         lifeImg.scale(40, 40);
-        bgImg = new Background();
-        bgImg.drawImage(lifeImg, 50, 840);
+        bgImg = new Background(level.bg);
+        if(life >= 1)
+            bgImg.drawImage(lifeImg, 50, 840);
         if(life >= 2)
             bgImg.drawImage(lifeImg, 75, 840);
         if(life == 3)
@@ -168,11 +240,11 @@ public class MyWorld extends World
     }
     
     private void handleScore(){
-        String score = Integer.toString(player.returnScore());
+        String score = Integer.toString(player.getScore());
         String hscore = Integer.toString(highscore);
         showText(score, 90, 130);
-        if(player.returnScore() > highscore){
-            highscore = player.returnScore();
+        if(player.getScore() > highscore){
+            highscore = player.getScore();
             showText(score, 1110, 130);
         }   
         else{
@@ -182,18 +254,22 @@ public class MyWorld extends World
     
     
     private void handleTunnel(){
-        if(player.getX() == 970 && player.getY() == 395){
-            player.setLocation(220, 395);
-        }
-        else if(player.getX() == 220 && player.getY() == 395){
-            player.setLocation(970, 395);
-        }
-        for(int x = 0; x < 4; x++){
-            if(ghs[x] != null){
-                if(ghs[x].getX() == 970 && ghs[x].getY() == 395)
-                    ghs[x].setLocation(220, 395);
-                else if(ghs[x].getX() == 220 && ghs[x].getY() == 395)
-                    ghs[x].setLocation(970, 395);
+        int[][][] tunnelLocations = level.tunnelLocations;
+        for(int y = 0; y < tunnelLocations.length; y++){
+            int[][] tunnel = tunnelLocations[y]; 
+            if(player.getX() == tunnel[0][0] && player.getY() == tunnel[0][1]){
+                player.setLocation(tunnel[1][0], tunnel[1][1]);
+            }
+            else if(player.getX() == tunnel[1][0] && player.getY() == tunnel[1][1]){
+                player.setLocation(tunnel[0][0], tunnel[0][1]);
+            }
+            for(int x = 0; x < ghs.length; x++){
+                if(ghs[x] != null){
+                    if(ghs[x].getX() == tunnel[0][0] && ghs[x].getY() == tunnel[0][1])
+                        ghs[x].setLocation(tunnel[1][0], tunnel[1][1]);
+                    else if(ghs[x].getX() == tunnel[1][0] && ghs[x].getY() == tunnel[1][1])
+                        ghs[x].setLocation(tunnel[0][0], tunnel[0][1]);
+                }
             }
         }
     }
@@ -229,6 +305,13 @@ public class MyWorld extends World
             else{
                 timer += 1;
             }
+            if(timer == frameRate * 8){
+                for(int x = 0; x < 4; x++){
+                    if(ghs[x] != null){
+                        ghs[x].setBlink();
+                    }
+                }
+            }
             if(timer == frameRate * orbTime){
                 orbEaten = false;
                 player.setGhostEdible(false);
@@ -237,7 +320,8 @@ public class MyWorld extends World
                     if(removedGhs[x] != null){
                         ghs[x] = new Ghost(x+1, player);
                         removedGhs[x] = null;
-                        addObject(ghs[x].returnActor(), 460, 316);
+                        ghs[x].level = level;
+                        addObject(ghs[x].getActor(), level.ghosts[x][0], level.ghosts[x][1]);
                     }
                     ghs[x].setImg();
                 }

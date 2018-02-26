@@ -6,18 +6,15 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
  * @author (your name) 
  * @version (a version number or a date)
  */
-public class Background extends GreenfootImage
-{
+public class Background extends GreenfootImage{
 
     /**
      * Constructor for objects of class Background.
      * 
      */
-    public Background()
+    public Background(String bg)
     {  
-       //super("./test.jpg");
-       super("./background.jpg");
-       this.drawOval(200, 200, 100, 100);
+       super(bg);
     }
     
     public GreenfootImage returnImage(){

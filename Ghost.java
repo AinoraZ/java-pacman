@@ -10,7 +10,7 @@ import java.util.Random;
 public class Ghost extends Actor
 {
     private GifImage img;
-    private LevelInfo level = new LevelInfo();
+    public LevelInfo level = new LevelInfo();
     private int addX = 0;
     private int addY = 0;
     private int id;
@@ -22,12 +22,17 @@ public class Ghost extends Actor
     
     private int rotation = 0;
     
-    private GifImage orange = new GifImage("./orange.gif");
-    private GifImage red = new GifImage("./red.gif");
-    private GifImage cyan = new GifImage("./cyan.gif");
-    private GifImage pink = new GifImage("./pink.gif");
+    private GifImage orange = new GifImage("images/orange.gif");
+    private GifImage red = new GifImage("images/red.gif");
+    private GifImage cyan = new GifImage("images/cyan.gif");
+    private GifImage pink = new GifImage("images/pink.gif");
     
     private boolean edible = false;
+    
+    private int defaultSpeed = 2;
+    private int edibleSpeed = 1;
+    private int moveSpeed = defaultSpeed;
+    
     
     private Player player;
     
@@ -62,13 +67,6 @@ public class Ghost extends Actor
     public void moveToTarget(){
         int[] tiles = level.findTile(getX(), getY());
         
-        /* DEBUG
-        System.out.println("PLayer pos: " + tiles[0] + ", " + tiles[1]);
-        System.out.println("PLayer pos: " + getX() + ", " + getY());
-        System.out.println("Info: " + (tiles[0] + addX) + ", " + (tiles[1] + addY) + 
-        ((level.legalMove(tiles[0] + addX, tiles[1] + addY) == 1)? " Is legal" : " Is not legal"));
-        System.out.println("Rotation: " + getRotation());*/
-        
          if(moving == false && !(addX == 0 && addY == 0)){
             if(level.legalMove(targetX, targetY) >= 1){
                 //turnTowards(getX() + addX, getY() + addY);
@@ -85,24 +83,19 @@ public class Ghost extends Actor
                     rotation = 270;
                 }
                 
-                setLocation(getX() + (addX*2), getY() + (addY*2));
+                stepMove(moveSpeed);
                 moving = true;
                 
             }
             rotationSetter();
             if(level.legalMove(targetX, targetY) >= 1){
-                setLocation(getX() + (addX*2), getY() + (addY*2));
+                stepMove(moveSpeed);
                 moving = true;
             }
             
         }
         else{
-            if(getX() != level.getX(targetX) || getY() != level.getY(targetY)){
-                setLocation(getX() + addX, getY() + addY);
-                if(getX() != level.getX(targetX) || getY() != level.getY(targetY)){
-                    setLocation(getX() + addX, getY() + addY);
-                }
-            }
+            stepMove(moveSpeed);
             
             if(getX() == level.getX(targetX) && getY() == level.getY(targetY)){
                 moving = false;
@@ -164,12 +157,24 @@ public class Ghost extends Actor
         targetY = tiles[1] + addY;
     }
     
-    void setEdible(){
-        img = new GifImage("./eaten.gif");
-        edible = true;
+    public void stepMove(int dist){
+        /*
+         * Moves player 1-by-1, ensuring he does not pass the tile.
+         */
+        for(int x = 0; x < dist; x++){
+           if(getX() != level.getX(targetX) || getY() != level.getY(targetY)){
+              setLocation(getX() + (addX), getY() + (addY));
+           }
+        }
     }
     
-    void reset(){
+    public void setEdible(){
+        img = new GifImage("images/eaten.gif");
+        edible = true;
+        moveSpeed = edibleSpeed;
+    }
+    
+    public void reset(){
         setImg();
         rotation = 0;
         moving = false;
@@ -179,7 +184,7 @@ public class Ghost extends Actor
         targetY = 0;
     }
     
-    void setImg(){
+    public void setImg(){
         switch(id){
             case 1:
                 img = orange;
@@ -195,9 +200,15 @@ public class Ghost extends Actor
                 break;
         }
         edible = false;
+        moveSpeed = defaultSpeed;
     }
     
-    public Actor returnActor(){
+    
+    public void setBlink(){
+        img = new GifImage("images/ghostblink.gif");
+    }
+    
+    public Actor getActor(){
         return this;
     }
 }

@@ -9,7 +9,7 @@ public class EnergyOrb extends Actor
 {
     
     public EnergyOrb(){
-        GreenfootImage playerImg = new GreenfootImage("./pacman.gif");
+        GreenfootImage playerImg = new GreenfootImage("images/pacman.gif");
         playerImg.scale(12, 12);
         setImage(playerImg);
     }

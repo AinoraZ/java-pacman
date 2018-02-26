@@ -8,12 +8,8 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
  */
 public class Player extends Actor
 {
-    /**
-     * Act - do whatever the Player wants to do. This method is called whenever
-     * the 'Act' or 'Run' button gets pressed in the environment.
-     */
-    private GifImage img = new GifImage("./pacman.gif");
-    private LevelInfo level = new LevelInfo();
+    private GifImage img = new GifImage("images/pacman.gif");
+    public LevelInfo level = new LevelInfo();
     private int addX = 0;
     private int addY = 0;
     
@@ -28,9 +24,16 @@ public class Player extends Actor
     private boolean moving = false;
     private int palletsEaten = 0;
     
-    private Animation deathAnimation = new Animation("./die.gif");
+    private Animation deathAnimation = new Animation("images/die.gif");
     
     private boolean death = false;
+    
+    private int timer = 0;
+    private int defaultTime = 10;
+    
+    public int moveSpeed = 3;
+    
+    public boolean alive = true;
     
     public void act() 
     {      
@@ -40,8 +43,12 @@ public class Player extends Actor
                 tempImg.scale(40, 40);
                 setImage(tempImg);
             }
-            else{
-                getWorldOfType(MyWorld.class).handleDeath();
+            else if(alive){
+                MyWorld world = getWorldOfType(MyWorld.class);
+                world.handleDeath();
+                if(world.life == 0){
+                    alive = false;
+                }
             }
         }
         else{
@@ -52,10 +59,23 @@ public class Player extends Actor
             keyPressed();
             setMovement();
             moveToTarget();
+            updateTimer();
+            
             eatPallets();
             eatOrbs();
             eatGhosts();
         }
+    }
+    
+    private void updateTimer(){
+        if(timer > 0){
+            timer--;
+        }
+    }
+    
+    public void handleGhostTouch(){
+        death = true;
+        getWorldOfType(MyWorld.class).subtract_life();
     }
     
     public void eatPallets(){
@@ -65,16 +85,7 @@ public class Player extends Actor
         }
         removeTouching(Pallets.class);
     }
-    
-    public void handleGhostTouch(){
-        death = true;
-        getWorldOfType(MyWorld.class).subtract_life();
-    }
-    
-    public boolean getDeath(){
-        return death;
-    }
-    
+
     public void eatOrbs(){
         if(isTouching(EnergyOrb.class)){
             getWorldOfType(MyWorld.class).handleOrbEat();
@@ -83,15 +94,10 @@ public class Player extends Actor
         removeTouching(EnergyOrb.class);
     }
     
-    public int getPalletsEaten(){
-        return palletsEaten;
-    }
-    
     public void eatGhosts(){
         if(ghostIsEdible){
-            if(isTouching(Ghost.class)){
-                score += 100;
-            }
+            int touchNum = getIntersectingObjects(Ghost.class).size();
+            score += 100 * touchNum;
             getWorldOfType(MyWorld.class).handleEat();
         }
     }
@@ -100,7 +106,15 @@ public class Player extends Actor
         ghostIsEdible = edible;
     }
     
-    public int returnScore(){
+    public boolean getDeath(){
+        return death;
+    }
+    
+    public int getPalletsEaten(){
+        return palletsEaten;
+    }
+    
+    public int getScore(){
         return score;
     }
     
@@ -110,96 +124,108 @@ public class Player extends Actor
             if(lastPressed.equals("right")){
                 addX = 1;
                 addY = 0;
+                timer = defaultTime;
             }
             else if(lastPressed.equals("left")){
                 addX = -1;
                 addY = 0;
+                timer = defaultTime;
             }
             else if(lastPressed.equals("up")){
                 addX = 0;
                 addY = -1;
+                timer = defaultTime;
             }
             else if(lastPressed.equals("down")){
                 addX = 0;
                 addY = +1;
+                timer = defaultTime;
             }
             targetX = tiles[0] + addX;
             targetY = tiles[1] + addY;
         }
         else{
-            if(lastPressed.equals("right") && getRotation() == 180){
-                addX = 1;
-                addY = 0;
-                targetX = tiles[0] + addX;
-                targetY = tiles[1] + addY;
-                moving = false;
+            if(timer == 0){
+                if(lastPressed.equals("right") && getRotation() == 180){
+                    addX = 1;
+                    addY = 0;
+                    targetX = tiles[0] + addX;
+                    targetY = tiles[1] + addY;
+                    moving = false;
+                }
+                else if(lastPressed.equals("left") && getRotation() == 0){
+                    addX = -1;
+                    addY = 0;
+                    targetX = tiles[0] + addX;
+                    targetY = tiles[1] + addY;
+                    moving = false;
+                }
+                 else if(lastPressed.equals("up") && getRotation() == 90){
+                    addX = 0;
+                    addY = -1;
+                    targetX = tiles[0] + addX;
+                    targetY = tiles[1] + addY;
+                    moving = false;
+                }
+                else if(lastPressed.equals("down") && getRotation() == 270){
+                    addX = 0;
+                    addY = 1;
+                    targetX = tiles[0] + addX;
+                    targetY = tiles[1] + addY;
+                    moving = false;
+                }
             }
-            else if(lastPressed.equals("left") && getRotation() == 0){
-                addX = -1;
-                addY = 0;
-                targetX = tiles[0] + addX;
-                targetY = tiles[1] + addY;
-                moving = false;
-            }
-             else if(lastPressed.equals("up") && getRotation() == 90){
-                addX = 0;
-                addY = -1;
-                targetX = tiles[0] + addX;
-                targetY = tiles[1] + addY;
-                moving = false;
-            }
-            else if(lastPressed.equals("down") && getRotation() == 270){
-                addX = 0;
-                addY = +1;
-                targetX = tiles[0] + addX;
-                targetY = tiles[1] + addY;
-                moving = false;
-            }
-            
         }
     }
     
     public void moveToTarget(){
         int[] tiles = level.findTile(getX(), getY());
         
-        /* DEBUG
-        System.out.println("PLayer pos: " + tiles[0] + ", " + tiles[1]);
-        System.out.println("PLayer pos: " + getX() + ", " + getY());
-        System.out.println("Info: " + (tiles[0] + addX) + ", " + (tiles[1] + addY) + 
-        ((level.legalMove(tiles[0] + addX, tiles[1] + addY) == 1)? " Is legal" : " Is not legal"));
-        DEBUG */
-
-        
-        //System.out.println("Rotation: " + getRotation());
-        
          if(moving == false && !(addX == 0 && addY == 0)){
             if(level.legalMove(targetX, targetY) >= 1){
-                //setRotation(180);
                 turnTowards(getX() + addX, getY() + addY);
-                move(2);
-                moving = true;
+                stepMove(moveSpeed);
+            
+                if(getX() == level.getX(targetX) && getY() == level.getY(targetY)){
+                    moving = false;
+                }
+                else{
+                    moving = true;
+                }
             }
-            rotationSetter();
-            if(level.legalMove(targetX, targetY) >= 1){
-                move(2);
-                moving = true;
+            else{
+                rotationSetter();
+                if(level.legalMove(targetX, targetY) >= 1){
+                    stepMove(moveSpeed);
+                    if(getX() == level.getX(targetX) && getY() == level.getY(targetY)){
+                        moving = false;
+                    }
+                    else{
+                        moving = true;
+                    }
+                }
             }
             
         }
         else{
-            if(getX() != level.getX(targetX) || getY() != level.getY(targetY)){
-                move(1);
-                if(getX() != level.getX(targetX) || getY() != level.getY(targetY)){
-                    move(1);
-                }
-            }
-            
+            stepMove(moveSpeed);  
             if(getX() == level.getX(targetX) && getY() == level.getY(targetY)){
                 moving = false;
             }
         }
     }
-   
+    
+    public void stepMove(int dist){
+        /*
+         * Moves player 1-by-1, ensuring he does not pass the tile.
+         */
+        for(int x = 0; x < dist; x++){
+           if(getX() != level.getX(targetX) || getY() != level.getY(targetY)){
+               move(1);
+           }
+        }
+    }
+  
     public void keyPressed(){
         if(Greenfoot.isKeyDown("right"))
             lastPressed = "right";
@@ -212,6 +238,10 @@ public class Player extends Actor
     }
     
     public void rotationSetter(){
+        /* 
+         * Function which sets next target to next tile in current path.
+         * Important if illegal input is given so that pacman would not stop.
+         */
         if(getRotation() == 0){
             addX = 1;
             addY = 0;
@@ -226,7 +256,7 @@ public class Player extends Actor
         }
         else if(getRotation() == 90){
             addX = 0;
-            addY = +1;
+            addY = 1;
         }
         int[] tiles = level.findTile(getX(), getY());
         targetX = tiles[0] + addX;
@@ -234,6 +264,9 @@ public class Player extends Actor
     }
     
     void reset(){
+        /*
+         * Resets all needed parameters to restart pacman with new life.
+         */
         moving = false;
         addX = 0; 
         addY = 0;
@@ -242,7 +275,7 @@ public class Player extends Actor
         ghostIsEdible = false;
         death = false;
         lastPressed = "";
-        deathAnimation = new Animation("./die.gif");
+        deathAnimation = new Animation("images/die.gif");
     }
     
     public Actor returnActor(){
