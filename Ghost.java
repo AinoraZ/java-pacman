@@ -38,6 +38,8 @@ public class Ghost extends Actor
     private int edibleSpeed = 1;
     private int moveSpeed = defaultSpeed;
     
+    private boolean noLimit = true;
+    
     
     private Player player;
     
@@ -120,35 +122,95 @@ public class Ghost extends Actor
     }
    
     private void keyPressed(){
-        Random rand = new Random();
-        int[] tiles = level.findTile(getX(), getY());
-        int n = rand.nextInt(4) + 1;
-        int not = (rotation / 90) + 1;
-        
-        while(n == not){
-            n = rand.nextInt(4) + 1;
+        if(!edible){
+            Random rand = new Random();
+            int[] tiles = level.findTile(getX(), getY());
+            int n = rand.nextInt(4) + 1;
+            int not = (rotation / 90) + 1;
+            
+            while(n == not){
+                n = rand.nextInt(4) + 1;
+            }
+            
+            if(moving == false){
+                if(n == 3){
+                    addX = 1;
+                    addY = 0;
+                }
+                else if(n == 4){
+                    addX = 0;
+                    addY = 1;
+                }
+                else if(n == 1){
+                    addX = -1;
+                    addY = 0;
+                }
+                else if(n == 2){
+                    addX = 0;
+                    addY = -1;
+                }
+                targetX = tiles[0] + addX;
+                targetY = tiles[1] + addY;
+            }
         }
-        
-        if(moving == false){
-            if(n == 3){
-                addX = 1;
-                addY = 0;
+        else{
+            if(moving == false){
+                int[] playerTiles = level.findTile(player.getX(), player.getY());
+                int[] ghostTiles = level.findTile(getX(), getY());
+                double maximum = 0;
+                int _addX = 0;
+                int _addY = 0;
+                if((rotation != 180 || noLimit) && level.legalMove(ghostTiles[0] + 1, ghostTiles[1]) > 0){
+                    double temp = distanceCalc(playerTiles[0], playerTiles[1], ghostTiles[0] + 1, ghostTiles[1]);
+                    if(temp > maximum){
+                        maximum = temp;
+                        _addX = 1;
+                        _addY = 0;
+                        //rotation = 0;
+                    }
+                }
+                if((rotation != 270 || noLimit) && level.legalMove(ghostTiles[0], ghostTiles[1] + 1) > 0){
+                    double temp = distanceCalc(playerTiles[0], playerTiles[1], ghostTiles[0], ghostTiles[1] + 1);
+                    if(temp > maximum){
+                        maximum = temp;
+                        _addX = 0;
+                        _addY = 1;
+                        //rotation = 90;
+                    }
+                }
+                if((rotation != 0 || noLimit) && level.legalMove(ghostTiles[0] - 1, ghostTiles[1]) > 0){
+                    double temp = distanceCalc(playerTiles[0], playerTiles[1], ghostTiles[0] - 1, ghostTiles[1]);
+                    if(temp > maximum){
+                        maximum = temp;
+                        _addX = -1;
+                        _addY = 0;
+                        //rotation = 180;
+                    }
+                }
+                if((rotation != 90 || noLimit) && level.legalMove(ghostTiles[0], ghostTiles[1] - 1) > 0){
+                    double temp = distanceCalc(playerTiles[0], playerTiles[1], ghostTiles[0], ghostTiles[1] - 1);
+                    if(temp > maximum){
+                        maximum = temp;
+                        _addX = 0;
+                        _addY = -1;
+                        //rotation = 270;
+                    }
+                }
+                
+                addX = _addX;
+                addY = _addY;
+                
+                noLimit = false;
+                
+                
+                targetX = ghostTiles[0] + addX;
+                targetY = ghostTiles[1] + addY;
             }
-            else if(n == 4){
-                addX = 0;
-                addY = 1;
-            }
-            else if(n == 1){
-                addX = -1;
-                addY = 0;
-            }
-            else if(n == 2){
-                addX = 0;
-                addY = -1;
-            }
-            targetX = tiles[0] + addX;
-            targetY = tiles[1] + addY;
         }
+    }
+    
+    private double distanceCalc(int aX, int aY, int bX, int bY){
+        return Math.sqrt(Math.pow(aX - bX, 2) + Math.pow(aY - bY, 2));
     }
     
     private void rotationSetter(){
@@ -204,6 +266,7 @@ public class Ghost extends Actor
         addY = 0;
         targetX = 0;
         targetY = 0;
+        noLimit = true;
     }
     
     /**
@@ -227,6 +290,7 @@ public class Ghost extends Actor
         }
         edible = false;
         moveSpeed = defaultSpeed;
+        noLimit = true;
     }
     
     /**
