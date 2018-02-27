@@ -1,10 +1,10 @@
 import greenfoot.*; 
 
 /**
- * Write a description of class Animation here.
+ * Class for handling play-once animations.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Ainoras Žukauskas
+ * @version 2018-02-27
  */
 public class Animation{
     private GifImage animation;
@@ -12,11 +12,21 @@ public class Animation{
     private boolean playedOnce = false;
     private boolean firstImageCycled = false;
     
+    /**
+     * The Constructor of Animation
+     * @param file  path to a .gif image.
+     */
     public Animation(String file){
         animation = new GifImage(file);
         animation.pause();
     }
     
+    /**
+     * Plays a gif image until it runs out of frames.
+     * <p>
+     * After there are no frames left, the Method returns null.
+     * @return A GreenfootImage which represents a single frame in the animation. Returns null after first loop.
+     */
     public GreenfootImage playOnce(){
         if(!playedOnce){
             if(!animation.isRunning()){
@@ -41,18 +51,5 @@ public class Animation{
             }
         }
         return null;
-    }
-    
-    public void resetPlayOnce(){
-        playedOnce = false;
-        firstImg = null;
-        firstImageCycled = false;
-    }
-    
-    public GreenfootImage loop(){
-        if(!animation.isRunning()){
-                animation.resume();
-        }
-        return animation.getCurrentImage();
     }
 }

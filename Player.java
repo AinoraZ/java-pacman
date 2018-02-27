@@ -1,15 +1,20 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
 
 /**
- * Write a description of class Player here.
+ * The player class which is responsible for all input of the user and appropriate (legal) movement in game.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Ainoras Žukauskas
+ * @version 2018-02-27
  */
 public class Player extends Actor
 {
     private GifImage img = new GifImage("images/pacman.gif");
+    
+    /**
+     * Stores information about the current level.
+     */
     public LevelInfo level = new LevelInfo();
+    
     private int addX = 0;
     private int addY = 0;
     
@@ -28,15 +33,30 @@ public class Player extends Actor
     
     private boolean death = false;
     
+    /** 
+     * Shows if player ran out of lives 
+     */
+    public boolean alive = true;
+    
     private int timer = 0;
     private int defaultTime = 10;
     
-    public int moveSpeed = 3;
+    /**
+     * The movement speed of player per frame
+     */
+    public int moveSpeed = 8;
     
-    public boolean alive = true;
     
-    public void act() 
-    {      
+    private GreenfootSound music = new GreenfootSound("sounds/Waka.mp3");
+    private GreenfootSound deathSound = new GreenfootSound("sounds/dead.mp3");
+    private GreenfootSound startSound = new GreenfootSound("sounds/start-sound.mp3");
+    private boolean audioPlayed = false;
+    
+    
+    /**
+     * The main loop of the Player class
+     */
+    public void act(){   
         if(death == true){
             GreenfootImage tempImg = deathAnimation.playOnce();
             if(tempImg != null){
@@ -56,6 +76,12 @@ public class Player extends Actor
             playerImg.scale(40, 40);
             setImage(playerImg);
             
+            if(!audioPlayed){
+                startSound.play();
+                audioPlayed = true;
+                Greenfoot.delay(300);
+            }
+            
             keyPressed();
             setMovement();
             moveToTarget();
@@ -73,11 +99,22 @@ public class Player extends Actor
         }
     }
     
+    /**
+     * Called when player is touched by a hostile Ghost.
+     * @see Ghost
+     */
     public void handleGhostTouch(){
         death = true;
+        music.stop();
         getWorldOfType(MyWorld.class).subtract_life();
+        deathSound.play();
     }
     
+    /**
+     * Checks if player is touching a pallet.
+     * <p>
+     * If player is touching a pallet, it is removed and added to the score.
+     */
     public void eatPallets(){
         if(isTouching(Pallets.class)){
             score += 10;
@@ -85,7 +122,13 @@ public class Player extends Actor
         }
         removeTouching(Pallets.class);
     }
-
+    
+    /**
+     * Checks if player is touching an orb.
+     * <p>
+     * If player is touching an orb, it is removed and all ghosts become edible (and non-hostile).
+     * @see handleOrbEat()
+     */
     public void eatOrbs(){
         if(isTouching(EnergyOrb.class)){
             getWorldOfType(MyWorld.class).handleOrbEat();
@@ -94,6 +137,12 @@ public class Player extends Actor
         removeTouching(EnergyOrb.class);
     }
     
+    /**
+     * Checks if player is touching an edible Ghost.
+     * <p>
+     * If player is touching an edible Ghost, it is removed and added to the score.
+     * @see setGhostEdible
+     */
     public void eatGhosts(){
         if(ghostIsEdible){
             int touchNum = getIntersectingObjects(Ghost.class).size();
@@ -102,23 +151,40 @@ public class Player extends Actor
         }
     }
     
+    /**
+     * Sets whether the ghosts are edible or not.
+     * @param edible    boolean value of the state of the Ghosts
+     * @see Ghost
+     */
     public void setGhostEdible(boolean edible){
         ghostIsEdible = edible;
     }
     
+    /**
+     * Gets whether the player is dead.
+     * @return boolean value of player state. True if dead, false otherwise.
+     */
     public boolean getDeath(){
         return death;
     }
     
+    /**
+     * Gets amount of pallets eaten.
+     * @return integer of pallets eaten in this level.
+     */
     public int getPalletsEaten(){
         return palletsEaten;
     }
     
+    /**
+     * Gets current score of player.
+     * @return integer of the current score
+     */
     public int getScore(){
         return score;
     }
     
-    public void setMovement(){
+    private void setMovement(){
         int[] tiles = level.findTile(getX(), getY());
         if(moving == false){
             if(lastPressed.equals("right")){
@@ -178,10 +244,12 @@ public class Player extends Actor
         }
     }
     
-    public void moveToTarget(){
+    private void moveToTarget(){
         int[] tiles = level.findTile(getX(), getY());
         
          if(moving == false && !(addX == 0 && addY == 0)){
+            if(!music.isPlaying())
+                music.play();
             if(level.legalMove(targetX, targetY) >= 1){
                 turnTowards(getX() + addX, getY() + addY);
                 stepMove(moveSpeed);
@@ -208,6 +276,8 @@ public class Player extends Actor
             
         }
         else{
+            if(!music.isPlaying())
+                music.play();
             stepMove(moveSpeed);  
             if(getX() == level.getX(targetX) && getY() == level.getY(targetY)){
                 moving = false;
@@ -215,7 +285,7 @@ public class Player extends Actor
         }
     }
     
-    public void stepMove(int dist){
+    private void stepMove(int dist){
         /*
          * Moves player 1-by-1, ensuring he does not pass the tile.
          */
@@ -226,7 +296,7 @@ public class Player extends Actor
         }
     }
   
-    public void keyPressed(){
+    private void keyPressed(){
         if(Greenfoot.isKeyDown("right"))
             lastPressed = "right";
         else if(Greenfoot.isKeyDown("left"))
@@ -237,7 +307,7 @@ public class Player extends Actor
             lastPressed = "down";
     }
     
-    public void rotationSetter(){
+    private void rotationSetter(){
         /* 
          * Function which sets next target to next tile in current path.
          * Important if illegal input is given so that pacman would not stop.
@@ -263,10 +333,10 @@ public class Player extends Actor
         targetY = tiles[1] + addY;
     }
     
-    void reset(){
-        /*
-         * Resets all needed parameters to restart pacman with new life.
-         */
+    /**
+     * Resets important player parameters for new life.
+     */
+    public void reset(){
         moving = false;
         addX = 0; 
         addY = 0;
@@ -278,7 +348,12 @@ public class Player extends Actor
         deathAnimation = new Animation("images/die.gif");
     }
     
-    public Actor returnActor(){
+    /**
+     * Gets the Actor of this Player object.
+     * @return Actor object of Player
+     * @see greenfoot.Actor
+     */
+    public Actor getActor(){
         return this;
     }
 }

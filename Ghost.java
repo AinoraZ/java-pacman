@@ -2,15 +2,20 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
 import java.util.Random;
 
 /**
- * Write a description of class Ghost here.
+ * The Enemy (Ghost) class containing all movement and interactions with the Player.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Ainoras Žukauskas
+ * @version 2018-02-27
  */
 public class Ghost extends Actor
 {
     private GifImage img;
+    
+    /**
+    * Stores information about the current level.
+    */
     public LevelInfo level = new LevelInfo();
+    
     private int addX = 0;
     private int addY = 0;
     private int id;
@@ -36,12 +41,20 @@ public class Ghost extends Actor
     
     private Player player;
     
+    /**
+     * The Constructor of Ghost class.
+     * @param _id       The identification number of a Ghost instance.
+     * @param _player   The player to interact with.
+     */
     public Ghost(int _id, Player _player){
         id = _id;
         setImg();
         player = _player;
     }
     
+     /**
+     * The main loop of the Ghost class
+     */
     public void act() 
     {
         GreenfootImage ghImg = img.getCurrentImage();
@@ -53,18 +66,21 @@ public class Ghost extends Actor
         handlePlayer();
     }
     
+    /**
+     * Gets if this Ghost is touching a Player.
+     * @return boolean  True if this Ghost is touching the Player. False otherwise.
+     */
     public boolean touchingPlayer(){
         return isTouching(Player.class);
     }
     
-    public void handlePlayer(){
+    private void handlePlayer(){
         if(touchingPlayer() && !edible && !player.getDeath()){
             player.handleGhostTouch();
         }
     }
     
-    
-    public void moveToTarget(){
+    private void moveToTarget(){
         int[] tiles = level.findTile(getX(), getY());
         
          if(moving == false && !(addX == 0 && addY == 0)){
@@ -103,7 +119,7 @@ public class Ghost extends Actor
         }
     }
    
-    public void keyPressed(){
+    private void keyPressed(){
         Random rand = new Random();
         int[] tiles = level.findTile(getX(), getY());
         int n = rand.nextInt(4) + 1;
@@ -135,7 +151,7 @@ public class Ghost extends Actor
         }
     }
     
-    public void rotationSetter(){
+    private void rotationSetter(){
         if(rotation == 0){
             addX = 1;
             addY = 0;
@@ -157,7 +173,7 @@ public class Ghost extends Actor
         targetY = tiles[1] + addY;
     }
     
-    public void stepMove(int dist){
+    private void stepMove(int dist){
         /*
          * Moves player 1-by-1, ensuring he does not pass the tile.
          */
@@ -168,12 +184,18 @@ public class Ghost extends Actor
         }
     }
     
+    /**
+     * Sets this Ghost to an edible state.
+     */
     public void setEdible(){
         img = new GifImage("images/eaten.gif");
         edible = true;
         moveSpeed = edibleSpeed;
     }
     
+    /**
+     * Soft-resets this Ghost.
+     */
     public void reset(){
         setImg();
         rotation = 0;
@@ -184,6 +206,10 @@ public class Ghost extends Actor
         targetY = 0;
     }
     
+    /**
+     * Sets an Image according to this Ghost id.
+     * @see greenfoot.GreenfootImage
+     */
     public void setImg(){
         switch(id){
             case 1:
@@ -203,11 +229,16 @@ public class Ghost extends Actor
         moveSpeed = defaultSpeed;
     }
     
-    
+    /**
+     * Sets this Ghost to blink (indicate that it is about to become un-edible).
+     */
     public void setBlink(){
         img = new GifImage("images/ghostblink.gif");
     }
     
+    /**
+     * Gets the Actor of this Ghost object.
+     */
     public Actor getActor(){
         return this;
     }

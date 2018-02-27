@@ -1,31 +1,28 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
 
 /**
- * Write a description of class Pallets here.
+ * Class for spawning pallets in game.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Ainoras Žukauskas
+ * @version 2018-02-27
  */
 public class Pallets extends Actor
 {   
-    
-    LevelInfo level = new LevelInfo();
     /**
-     * Act - do whatever the Pallets wants to do. This method is called whenever
-     * the 'Act' or 'Run' button gets pressed in the environment.
+     * The Constructor of Pallets.
      */
-    
     public Pallets(){
         GreenfootImage playerImg = new GreenfootImage("images/pacman.gif");
         playerImg.scale(6, 6);
         setImage(playerImg);
     }
-    public void act() 
-    {
 
-    }
-    
-     public Actor returnActor(){
+    /**
+     * Gets actor of this Pallets object.
+     * @return Actor object of Pallets.
+     * @see greenfoot.Actor
+     */
+    public Actor getActor(){
         return this;
     }
 }

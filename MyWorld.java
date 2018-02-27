@@ -3,10 +3,10 @@ import java.util.Scanner;
 import java.io.*;
 
 /**
- * Write a description of class MyWorld here.
+ * The main logic and scene of the game.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Ainoras Žukauskas 
+ * @version 2018-02-27
  */
 public class MyWorld extends World
 {
@@ -19,6 +19,12 @@ public class MyWorld extends World
                            new Ghost(4, player)};
     
     
+    /**
+     * Determines if an orb has been eaten.
+     * <p>
+     * Used to set Ghosts into an edible state.
+     * @see Ghost
+     */
     public boolean orbEaten = false;
     private Ghost[] removedGhs = new Ghost[4];
     
@@ -31,17 +37,22 @@ public class MyWorld extends World
     private Background bgImg;
     String path = MyWorld.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     
+    /**
+     * Determines the amount of lives left.
+     */
     public int life = 3;
     private int levelCounter = 1;
     
     private boolean gameover = false;
+    private boolean gamewon = false;
     
     private String key;
     
-    
+    /**
+     * The Constructor for MyWorld
+     */
     public MyWorld()
     {    
-        // Create a new world with 600x400 cells with a cell size of 1x1 pixels.
         super(new Background("images/background.jpg").getWidth(), new Background("images/background.jpg").getHeight(), 1);
         
         File parent = new File(path);
@@ -50,12 +61,12 @@ public class MyWorld extends World
         getHighscore();
         
         bgImg = new Background(level.bg);
-        setBackground(bgImg.returnImage());
+        setBackground(bgImg.getImage());
         
         addPallets();
         
         spawnGhosts();
-        addObject(player.returnActor(), level.player[0], level.player[1]);
+        addObject(player.getActor(), level.player[0], level.player[1]);
         
         displayLife();
     }
@@ -79,7 +90,7 @@ public class MyWorld extends World
         }
     }
     
-    public void addPallets(){
+    private void addPallets(){
         double startX = level.startX;
         double startY = level.startY;
         double tX = level.tX;
@@ -88,11 +99,11 @@ public class MyWorld extends World
         for(double y = 0; y < 29; y++){
             for(double x = 0; x < 26; x++){
                 if(level.legalMove((int) x, (int) y) == 1){
-                    addObject(new Pallets().returnActor(), (int) (startX + tX * x), (int) (startY + tY * y));
+                    addObject(new Pallets().getActor(), (int) (startX + tX * x), (int) (startY + tY * y));
                     palletsCreated++;
                 }
                 else if(level.legalMove((int) x, (int) y) == 2){
-                    addObject(new EnergyOrb().returnActor(), (int) (startX + tX * x), (int) (startY + tY * y));
+                    addObject(new EnergyOrb().getActor(), (int) (startX + tX * x), (int) (startY + tY * y));
                     palletsCreated++;
                 }
                 
@@ -100,20 +111,29 @@ public class MyWorld extends World
         }
     }
     
+    /**
+     * The main loop of MyWorld.
+     */
     public void act(){
-        if(!gameover){
+        if(!gameover && !gamewon){
             handleScore();
             handleTunnel();
             ghostEdible();
             handleWin();
         }
-        else{
+        else if(gameover){
             pressToContinue();
             handleTunnel();
         }
+        else{
+            pressToContinue();
+        }
     }
     
-    public void pressToContinue(){
+    /*
+     * Waits for user input to reset the world.
+     */
+    private void pressToContinue(){
         key = Greenfoot.getKey();
         if(key != null){
             if(Greenfoot.isKeyDown(key))
@@ -122,6 +142,10 @@ public class MyWorld extends World
         }
     }
     
+    /*
+     * Handles switching of levels and saving of highscore.
+     * Also shows win screen if out of levels.
+     */
     private void handleWin(){
         if(player.getPalletsEaten() == palletsCreated){
             try{
@@ -144,12 +168,20 @@ public class MyWorld extends World
             }
             if(levelCounter == 4){
                 addObject(new StaticImage("images/youwin.png").getActor(), bgImg.getWidth() / 2, bgImg.getHeight() / 2);
-                Greenfoot.stop();
+                gamewon = true;
+                
+                for(int x = 0; x < ghs.length; x++){
+                    if(ghs[x] != null){
+                        removeObject(ghs[x]);
+                        ghs[x] = null;
+                    }
+                }
+                removeObject(player);
                 return;
             }
             
             bgImg = new Background(level.bg);
-            setBackground(bgImg.returnImage());
+            setBackground(bgImg.getImage());
             displayLife();
    
             addPallets();
@@ -159,7 +191,10 @@ public class MyWorld extends World
         }
     }
     
-    public void hardReset(){
+    /*
+     * Resets the game fully.
+     */
+    private void hardReset(){
         reset();
         
         player.level = level;
@@ -179,9 +214,14 @@ public class MyWorld extends World
         spawnGhosts();
         
         removeObject(player);
-        addObject(player.returnActor(), level.player[0], level.player[1]);
+        addObject(player.getActor(), level.player[0], level.player[1]);
     }
     
+    /**
+     * Method for handling player death.
+     * <p>
+     * The game is soft-reset if the player still has lives. Otherwise, the game is completely reset.
+     */
     public void handleDeath(){
         if(life <= 0){
             addObject(new StaticImage("images/gameover.png").getActor(), bgImg.getWidth() / 2, bgImg.getHeight() / 2);
@@ -203,29 +243,43 @@ public class MyWorld extends World
         player.reset();
         
         removeObject(player);
-        addObject(player.returnActor(), level.player[0], level.player[1]);
+        addObject(player.getActor(), level.player[0], level.player[1]);
         
         System.gc();
         
     }
     
+    /**
+     * Subtracts a life of the player.
+     * <p>
+     * Also updates the amount of lives on screen.
+     */
     public void subtract_life(){
         if(life >= 1)
             life--;
         displayLife();
     }
     
+    /*
+     * The soft-reset method for MyWorld
+     */
     private void reset(){
         orbEaten = false;
         timer = 0;
     }
     
+    /*
+     * Spawns all of the ghosts.
+     */
     private void spawnGhosts(){
-        for(int x = 0; x < 4; x++){
+        for(int x = 0; x < ghs.length; x++){
             addObject(ghs[x].getActor(), level.ghosts[x][0], level.ghosts[x][1]);
         }
     }
     
+    /*
+     * Draws the current life of the player on screen.
+     */
     private void displayLife(){
         GreenfootImage lifeImg = new GreenfootImage("life.png");
         lifeImg.scale(40, 40);
@@ -236,9 +290,13 @@ public class MyWorld extends World
             bgImg.drawImage(lifeImg, 75, 840);
         if(life == 3)
             bgImg.drawImage(lifeImg, 100, 840);
-        setBackground(bgImg.returnImage());
+        setBackground(bgImg.getImage());
     }
     
+    /*
+     * Draws the score and highscore on screen.
+     * Also sets new highscore.
+     */
     private void handleScore(){
         String score = Integer.toString(player.getScore());
         String hscore = Integer.toString(highscore);
@@ -253,6 +311,9 @@ public class MyWorld extends World
     }
     
     
+    /*
+     * Handles Ghosts and Player trying to pass through tunnels.
+     */
     private void handleTunnel(){
         int[][][] tunnelLocations = level.tunnelLocations;
         for(int y = 0; y < tunnelLocations.length; y++){
@@ -274,6 +335,9 @@ public class MyWorld extends World
         }
     }
     
+    /**
+     * Finds ghosts touching the player and removes them from MyWorld.
+     */
     public void handleEat(){
         for(int x = 0; x < 4; x++){
             if(ghs[x] != null){
@@ -286,12 +350,18 @@ public class MyWorld extends World
         }
     }
     
+    /**
+     * Handles an orb being eaten.
+     */
     public void handleOrbEat(){
         orbEaten = true;
         timer = 0;
     }
     
-    public void ghostEdible(){
+    /*
+     * Makes the Ghosts edible for a period of time. Determined by {@link frameRate} and {@link orbTime}.
+     */
+    private void ghostEdible(){
         if(orbEaten){
             if(timer == 0){
                 for(int x = 0; x < 4; x++){

@@ -1,34 +1,45 @@
 /**
- * Write a description of class LevelInfo here.
+ * Class for storing all of the different level information.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Ainoras Žukauskas 
+ * @version 2018-02-27
  */
 public class LevelInfo{
-    // instance variables - replace the example below with your own
-    
+
+    /** 2D matrix of the game level. */
     public int[][] level;
+    /** Top left corner X coordinate. */
     public double startX;
+    /** Top left corner Y coordinate. */
     public double startY;
+    /** Length of one tile in the X axis. */
     public double tX;
+    /** Length of one tile in the Y axis. */
     public double tY;
     
+    /** 2D array containing starting posistions of all ghosts. */
     public int[][] ghosts;
     
+    /** Array containing starting position of player. */
     public int[] player;
     
+    /** 3D Array containing pairs of inter-connected tunnel coordinates. */
     public int[][][] tunnelLocations;
     
+    /** Path of the background image for given level. */
     public String bg;
     
 
     /**
-     * Constructor for objects of class LevelInfo
+     * The Constructor of LevelInfo.
      */
     public LevelInfo(){
         setLevel1();
     }
     
+    /**
+     * Sets the game level to 1.
+     */
     public void setLevel1(){
         level = new int[][]{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                             {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
@@ -72,6 +83,9 @@ public class LevelInfo{
         bg = "images/background.jpg";
     }
     
+    /**
+     * Sets the game level to 2.
+     */
     public void setLevel2(){
             level = new int[][]{{2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
                                 {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -116,6 +130,9 @@ public class LevelInfo{
             bg = "images/background2.png";
     }
     
+    /**
+     * Sets the game level to 3.
+     */
     public void setLevel3(){
         level = new int[][]{{1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                             {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -163,18 +180,38 @@ public class LevelInfo{
         bg = "images/background3.jpg";
     }
     
+    /**
+     * Gets the current level layout
+     * @return 2D matrix of Integers ranging from 0 to 2, where 0 is a wall, 1 - pallet, 2 - energy orb.
+     */
     public int[][] getLevel(){
         return level;
     }
     
+    /**
+     * Gets the X coordinate of given tile.
+     * @param tileX     Integer of tile. 
+     * @return Integer which represents the X coordinate.
+     */
     public int getX(int tileX){
         return (int) (startX + (tX*tileX));
     }
     
+    /**
+     * Gets the Y coordinate of given tile.
+     * @param tileY     Integer of tile. 
+     * @return Integer which represents the Y coordinate.
+     */
     public int getY(int tileY){
         return (int) (startY + (tY * tileY));
     }
     
+    /**
+     * Gets if a move is legal (not a wall and not out of bounds).
+     * @param tileX the X coordinate tile.
+     * @param tileY the Y coordinate tile.
+     * @return Integer >0 if legal, 0 if illegal.
+     */
     public int legalMove(int tileX, int tileY){
         if(tileX < 0 || tileX > level[0].length - 1)
             return 0;
@@ -183,6 +220,12 @@ public class LevelInfo{
         return level[tileY][tileX];
     }
     
+    /**
+     * Gets what tile given coordinates belong to.
+     * @param coordX the X coordinate.
+     * @param coordY the Y coordinate.
+     * @return Integer array of 2 elements, where the first element is the X coordinate tile, the second - Y coordinate tile.
+     */
     public int[] findTile(int coordX, int coordY){
         int[] ret = new int[2];
         ret[0] = 0;

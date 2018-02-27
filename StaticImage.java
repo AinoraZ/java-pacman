@@ -1,14 +1,16 @@
 import greenfoot.*;
 
 /**
- * Write a description of class GameOver here.
+ * Class for displaying static images as actors.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Ainoras Žukauskas
+ * @version 2018-02-27
  */
 public class StaticImage extends Actor
 {
-
+    /**
+     * The Constructor of StaticImage.
+     */
     public StaticImage(String path)
     {  
        GreenfootImage img = new GreenfootImage(path);
@@ -16,6 +18,11 @@ public class StaticImage extends Actor
        setImage(img);
     }
     
+    /**
+    * Gets actor of this StaticImage object.
+    * @return Actor object of StaticImage
+    * @see greenfoot.Actor
+    */
     public Actor getActor(){
         return this;
     }

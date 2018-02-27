@@ -1,23 +1,29 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
 
 /**
- * Write a description of class Background here.
+ * Class for storing the Background image of a level.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author  Ainoras Žukauskas
+ * @version 2018-02-27
  */
+
 public class Background extends GreenfootImage{
 
     /**
-     * Constructor for objects of class Background.
-     * 
+     * The Constructor of Background.
+     * @param bg    path to a background image.
      */
     public Background(String bg)
     {  
        super(bg);
     }
     
-    public GreenfootImage returnImage(){
+    /**
+     * Gets the Image of this Background object.
+     * @return GreenfootImage of the background.
+     * @see greenfoot.GreenfootImage
+     */
+    public GreenfootImage getImage(){
         return this;
     }
 }
