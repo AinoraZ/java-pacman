@@ -15,22 +15,31 @@ public class Player extends Actor
      */
     public LevelInfo level = new LevelInfo();
     
+    /* Added/subtracted from current tile location */
     private int addX = 0;
     private int addY = 0;
     
+    /* Target tile x and y */
     private int targetX;
     private int targetY;
     
     private boolean ghostIsEdible = false;
     
+    /* Score of player */
     private int score = 0;
     
+    /* Last pressed key */
     private String lastPressed = "";
+    
+    /* Is player moving to another tile? */
     private boolean moving = false;
+    
+    /* Amount of pallets eaten */
     private int palletsEaten = 0;
     
     private Animation deathAnimation = new Animation("images/die.gif");
     
+    /* Is player dead? */ 
     private boolean death = false;
     
     /** 
@@ -38,13 +47,15 @@ public class Player extends Actor
      */
     public boolean alive = true;
     
+    /* Timer for user input */
     private int timer = 0;
+    /* Default timeout for user input*/
     private int defaultTime = 10;
     
     /**
      * The movement speed of player per frame
      */
-    public int moveSpeed = 8;
+    public int moveSpeed = 3;
     
     
     private GreenfootSound music = new GreenfootSound("sounds/Waka.mp3");
